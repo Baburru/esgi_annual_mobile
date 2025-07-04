@@ -12,80 +12,80 @@ import com.example.esgi_annual.screens.MainAppScaffold
 import com.example.esgi_annual.screens.LivrablesScreen
 import com.example.esgi_annual.screens.RapportScreen
 import com.example.esgi_annual.screens.NotationScreen
+import com.example.esgi_annual.screens.LoginScreen
 import com.example.esgi_annual.ui.theme.ESGI_ANNUALTheme
+import kotlinx.coroutines.launch
+import com.example.esgi_annual.RetrofitInstance
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             ESGI_ANNUALTheme {
-                MainScreen()
+                MainActivityContent()
             }
         }
     }
 }
 
 @Composable
+fun MainActivityContent() {
+    val context = LocalContext.current
+    var isLoggedIn by remember { mutableStateOf(false) }
+
+    // Vérifie si un token est stocké (SharedPreferences)
+    LaunchedEffect(Unit) {
+        val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+        isLoggedIn = prefs.getString("token", null) != null
+    }
+
+    if (!isLoggedIn) {
+        LoginScreen(onLoginSuccess = {
+            isLoggedIn = true
+        })
+    } else {
+        MainScreen()
+    }
+}
+
+@Composable
 fun MainScreen() {
     var projetSelectionne by remember { mutableStateOf<Projet?>(null) }
-    val projets = remember {
-        listOf(
-            Projet(
-                1,
-                "Projet Annuel anne Ingenierie du Web",
-                "Active",
-                "14/01/2025",
-                "22/02/2025",
-                8,
-                3,
-                etudiants = listOf(
-                    Etudiant("Alice Dupont", 1),
-                    Etudiant("Bob Martin", 1),
-                    Etudiant("Charlie Durand", 1),
-                    Etudiant("David Bernard", 2),
-                    Etudiant("Emma Leroy", 2),
-                    Etudiant("Fanny Petit", 2),
-                    Etudiant("Gabriel Moreau", 3),
-                    Etudiant("Hugo Blanc", 3)
-                )
-            ),
-            Projet(
-                2,
-                "Projet Annuel anne Ingenierie du Web",
-                "Clôturée",
-                "14/01/2025",
-                "22/02/2025",
-                8,
-                3,
-                etudiants = listOf(
-                    Etudiant("Isabelle Roux", 1),
-                    Etudiant("Julien Fabre", 1),
-                    Etudiant("Kevin Simon", 2),
-                    Etudiant("Laura Girard", 2),
-                    Etudiant("Manon Lefevre", 3)
-                )
-            ),
-            Projet(
-                3,
-                "Projet Annuel anne Ingenierie du Web",
-                "Programmée",
-                "14/01/2025",
-                "22/02/2025",
-                8,
-                3,
-                etudiants = listOf(
-                    Etudiant("Nina Perrin", 1),
-                    Etudiant("Olivier Marchand", 1),
-                    Etudiant("Pauline Robert", 2),
-                    Etudiant("Quentin Dubois", 2),
-                    Etudiant("Romain Gauthier", 3)
-                )
-            )
-        )
+    var projets by remember { mutableStateOf<List<Projet>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        coroutineScope.launch {
+            try {
+                isLoading = true
+                error = null
+                projets = RetrofitInstance.api.getProjets(1) // page 1 par défaut
+            } catch (e: Exception) {
+                error = "Erreur lors du chargement des projets : ${e.localizedMessage}"
+            } finally {
+                isLoading = false
+            }
+        }
     }
+
     if (projetSelectionne == null) {
-        ListeProjetsScreen(projets) { projet ->
-            projetSelectionne = projet
+        when {
+            isLoading -> {
+                androidx.compose.material3.CircularProgressIndicator()
+            }
+            error != null -> {
+                androidx.compose.material3.Text(error!!, color = androidx.compose.ui.graphics.Color.Red)
+            }
+            else -> {
+                ListeProjetsScreen(projets) { projet ->
+                    projetSelectionne = projet
+                }
+            }
         }
     } else {
         BackHandler {
