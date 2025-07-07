@@ -19,11 +19,13 @@ import com.example.esgi_annual.LoginResponse
 import androidx.compose.ui.platform.LocalContext
 import android.content.Context
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import android.util.Log
+import androidx.compose.material3.CardDefaults
 
 @Composable
 fun LoginScreen(onLoginSuccess: () -> Unit) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("mathis@mail.fr") }
+    var password by remember { mutableStateOf("azerty123") }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
@@ -31,19 +33,24 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
 
     fun handleLogin() {
         coroutineScope.launch {
+            Log.d("LoginScreen", "Attempting login for: $email")
             error = null
             loading = true
             try {
                 val response = RetrofitInstance.apiLogin.login(LoginRequest(email, password))
-                if (response.id != null && response.token != null) {
-                    // Stockage du token
+                Log.d("LoginScreen", "Login response received: $response")
+                if (response.id != null) {
+                    Log.d("LoginScreen", "Login successful")
+                    // Stockage du token (id)
                     val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
-                    prefs.edit().putString("token", response.token).apply()
+                    prefs.edit().putString("token", response.id).apply()
                     onLoginSuccess()
                 } else {
+                    Log.e("LoginScreen", "Invalid response from API")
                     error = "Email ou mot de passe invalide. Veuillez réessayer."
                 }
             } catch (e: Exception) {
+                Log.e("LoginScreen", "Login error", e)
                 error = "Email ou mot de passe invalide. Veuillez réessayer."
             } finally {
                 loading = false
@@ -60,7 +67,8 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
         Card(
             modifier = Modifier.padding(16.dp),
             shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(8.dp)
+            elevation = CardDefaults.cardElevation(8.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
             Column(
                 modifier = Modifier

@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import com.example.esgi_annual.R
 import com.example.esgi_annual.model.Projet
 import com.example.esgi_annual.model.Etudiant
+import androidx.compose.runtime.key
 
 @Composable
 fun ListeProjetsScreen(
@@ -31,7 +32,7 @@ fun ListeProjetsScreen(
     var projetParticipants by remember { mutableStateOf<Projet?>(null) }
 
     Column(modifier = Modifier.padding(8.dp)) {
-        projets.forEach { projet ->
+        projets.forEachIndexed { index, projet ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -66,7 +67,7 @@ fun ListeProjetsScreen(
                                 lineHeight = 12.sp
                             )
                             Text(
-                                projet.titre,
+                                projet.name,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp,
                                 color = Color(0xFF114B5F),
@@ -81,11 +82,11 @@ fun ListeProjetsScreen(
                             horizontalAlignment = Alignment.End
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                val (statutColor, statutText, statutIcon) = when (projet.statut) {
-                                    "Active" -> Triple(Color(0xFF2ECC40), "Active", R.drawable.ic_check_circle)
-                                    "Clôturée" -> Triple(Color(0xFFFF4136), "Clôturée", R.drawable.ic_close)
-                                    "Programmée" -> Triple(Color(0xFFFFDC00), "Programmée", R.drawable.ic_schedule)
-                                    else -> Triple(Color.Gray, projet.statut, R.drawable.ic_home)
+                                val (statutColor, statutText, statutIcon) = when (projet.status.lowercase()) {
+                                    "active" -> Triple(Color(0xFF2ECC40), "Active", R.drawable.ic_check_circle)
+                                    "clôturée" -> Triple(Color(0xFFFF4136), "Clôturée", R.drawable.ic_close)
+                                    "programmée", "programmed" -> Triple(Color(0xFFFFDC00), "Programmée", R.drawable.ic_schedule)
+                                    else -> Triple(Color.Gray, projet.status, R.drawable.ic_home)
                                 }
                                 Text(statutText, color = statutColor, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                 Spacer(modifier = Modifier.width(4.dp))
@@ -107,7 +108,7 @@ fun ListeProjetsScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("• ", fontSize = 18.sp, color = Color(0xFF114B5F))
                                 Text(
-                                    "Date de creation : ${projet.dateCreation}",
+                                    "Début : ${projet.startDate}",
                                     fontSize = 14.sp,
                                     color = Color(0xFF114B5F)
                                 )
@@ -116,7 +117,7 @@ fun ListeProjetsScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("• ", fontSize = 18.sp, color = Color(0xFF114B5F))
                                 Text(
-                                    "Date de rendu : ${projet.dateRendu}",
+                                    "Fin : ${projet.endDate}",
                                     fontSize = 14.sp,
                                     color = Color(0xFF114B5F)
                                 )
@@ -124,9 +125,9 @@ fun ListeProjetsScreen(
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("${projet.participants} Participants", fontSize = 14.sp, color = Color(0xFF114B5F))
+                            Text("${projet.students.size} Participants", fontSize = 14.sp, color = Color(0xFF114B5F))
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text("${projet.groupes} Groupes", fontSize = 14.sp, color = Color(0xFF114B5F))
+                            Text("${projet.groups.size} Groupes", fontSize = 14.sp, color = Color(0xFF114B5F))
                         }
                     }
                     Spacer(modifier = Modifier.height(12.dp))
@@ -138,7 +139,11 @@ fun ListeProjetsScreen(
                         OutlinedButton(
                             onClick = { projetParticipants = projet },
                             shape = RoundedCornerShape(4.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF114B5F))
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = Color(
+                                    0xFF114B5F
+                                )
+                            )
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_person),
@@ -147,7 +152,11 @@ fun ListeProjetsScreen(
                                 modifier = Modifier.size(22.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Participants", color = Color(0xFF114B5F), fontWeight = FontWeight.Bold)
+                            Text(
+                                "Participants",
+                                color = Color(0xFF114B5F),
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                         Button(
                             onClick = { onProjetClick(projet) },
@@ -168,39 +177,36 @@ fun ListeProjetsScreen(
             onDismissRequest = { projetParticipants = null },
             title = { Text("Participants") },
             text = {
-                val groupes = projet.etudiants.groupBy { it.groupe }.toSortedMap()
+                val students = projet.students.filter { it.type == "student" }
+                val teachers = projet.students.filter { it.type != "student" }
                 Column(
                     modifier = Modifier.padding(bottom = 4.dp)
                 ) {
-                    if (projet.etudiants.isEmpty()) {
-                        Text("Aucun étudiant")
+                    Text("Élèves :", fontWeight = FontWeight.Bold, color = Color(0xFF114B5F))
+                    if (students.isEmpty()) {
+                        Text("Aucun élève")
                     } else {
-                        groupes.forEach { (groupe, etudiants) ->
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Text("Groupe $groupe :", fontWeight = FontWeight.Bold, color = Color(0xFF114B5F))
-                            Spacer(modifier = Modifier.height(4.dp))
-                            etudiants.forEachIndexed { idx, etu ->
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(top = 4.dp, bottom = if (idx == etudiants.lastIndex) 0.dp else 4.dp)
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(32.dp)
-                                            .clip(CircleShape)
-                                            .background(Color(0xFFC0DFE3)),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = etu.nom.split(" ").joinToString("") { it.first().toString() }.uppercase(),
-                                            color = Color(0xFF114B5F),
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Text(etu.nom)
-                                }
+                        students.forEach { student ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("${student.firstName} ${student.lastName}", color = Color(0xFF114B5F))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(student.email, color = Color.Gray, fontSize = 12.sp)
                             }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Intervenants :", fontWeight = FontWeight.Bold, color = Color(0xFF114B5F))
+                    if (teachers.isEmpty()) {
+                        Text("Aucun intervenant")
+                    } else {
+                        teachers.forEach { teacher ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("${teacher.firstName} ${teacher.lastName}", color = Color(0xFF114B5F))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(teacher.email, color = Color.Gray, fontSize = 12.sp)
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
                 }
@@ -212,4 +218,4 @@ fun ListeProjetsScreen(
             }
         )
     }
-} 
+}

@@ -23,6 +23,11 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Set the application context for RetrofitInstance
+        RetrofitInstance.appContext = applicationContext
+        // Always log out the user on app start
+        val prefs = getSharedPreferences("auth", Context.MODE_PRIVATE)
+        prefs.edit().remove("token").apply()
         setContent {
             ESGI_ANNUALTheme {
                 MainActivityContent()
@@ -64,7 +69,8 @@ fun MainScreen() {
             try {
                 isLoading = true
                 error = null
-                projets = RetrofitInstance.api.getProjets(1) // page 1 par défaut
+                val response = RetrofitInstance.api.getProjets(0, true) // page 1 par défaut, resolveStudents
+                projets = response.results
             } catch (e: Exception) {
                 error = "Erreur lors du chargement des projets : ${e.localizedMessage}"
             } finally {
@@ -94,7 +100,7 @@ fun MainScreen() {
         MainAppScaffold(
             projet = projetSelectionne!!,
             onBack = { projetSelectionne = null },
-            livrablesScreen = { LivrablesScreen() },
+            livrablesScreen = { LivrablesScreen(projetSelectionne!!) },
             rapportScreen = { RapportScreen() },
             notationScreen = { NotationScreen() }
         )

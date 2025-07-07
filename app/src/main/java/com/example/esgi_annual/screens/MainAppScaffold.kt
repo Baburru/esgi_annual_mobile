@@ -40,7 +40,7 @@ fun MainAppScaffold(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(projet.titre) },
+                title = { Text(projet.name) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Retour")
