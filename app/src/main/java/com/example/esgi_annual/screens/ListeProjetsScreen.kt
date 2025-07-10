@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.esgi_annual.R
 import com.example.esgi_annual.model.Projet
-import com.example.esgi_annual.model.Etudiant
 import androidx.compose.runtime.key
 
 @Composable
@@ -177,34 +176,19 @@ fun ListeProjetsScreen(
             onDismissRequest = { projetParticipants = null },
             title = { Text("Participants") },
             text = {
-                val students = projet.students.filter { it.type == "student" }
-                val teachers = projet.students.filter { it.type != "student" }
                 Column(
                     modifier = Modifier.padding(bottom = 4.dp)
                 ) {
-                    Text("Élèves :", fontWeight = FontWeight.Bold, color = Color(0xFF114B5F))
-                    if (students.isEmpty()) {
-                        Text("Aucun élève")
+                    Text("Membres du projet :", fontWeight = FontWeight.Bold, color = Color(0xFF114B5F))
+                    Spacer(modifier = Modifier.height(12.dp))
+                    if (projet.students.isEmpty()) {
+                        Text("Aucun membre")
                     } else {
-                        students.forEach { student ->
+                        projet.students.forEach { student ->
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("${student.firstName} ${student.lastName}", color = Color(0xFF114B5F))
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(student.email, color = Color.Gray, fontSize = 12.sp)
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("Intervenants :", fontWeight = FontWeight.Bold, color = Color(0xFF114B5F))
-                    if (teachers.isEmpty()) {
-                        Text("Aucun intervenant")
-                    } else {
-                        teachers.forEach { teacher ->
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("${teacher.firstName} ${teacher.lastName}", color = Color(0xFF114B5F))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(teacher.email, color = Color.Gray, fontSize = 12.sp)
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                         }

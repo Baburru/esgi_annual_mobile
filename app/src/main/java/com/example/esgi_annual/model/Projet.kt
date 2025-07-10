@@ -20,10 +20,8 @@ data class Projet(
     val name: String = "",
     val description: String = "",
     val status: String = "",
-    val students: List<Student> = emptyList(),
+    val students: List<Student> = emptyList(), // for list endpoint
     val groups: List<Groupe> = emptyList(),
-    val scoringGrids: List<Any> = emptyList(),
-    val deliverablesList: List<String> = emptyList(),
     val startDate: String = "",
     val endDate: String = "",
     val options: ProjetOptions = ProjetOptions()

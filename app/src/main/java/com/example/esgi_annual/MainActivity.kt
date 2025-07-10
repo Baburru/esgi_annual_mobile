@@ -19,6 +19,7 @@ import com.example.esgi_annual.RetrofitInstance
 import android.content.Context
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import com.example.esgi_annual.model.ProjetDetails
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -100,8 +101,8 @@ fun MainScreen() {
         MainAppScaffold(
             projet = projetSelectionne!!,
             onBack = { projetSelectionne = null },
-            livrablesScreen = { LivrablesScreen(projetSelectionne!!) },
-            rapportScreen = { RapportScreen() },
+            livrablesScreen = { LivrablesScreen(projet = projetSelectionne!!) },
+            rapportScreen = { RapportScreen(projet = projetSelectionne!!) },
             notationScreen = { NotationScreen() }
         )
     }
